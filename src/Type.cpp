@@ -7,10 +7,6 @@ bool Type::operator== (const Type & other) const {
     return Equal(other);
 }
 
-SimpleType::~SimpleType() { }
-
-CompositeType::~CompositeType() { }
-
 bool FPType::Equal(const Type & other) const {
     return true;
 }
@@ -23,8 +19,6 @@ std::string FPType::ToString() const {
     return "FloatingPoint";
 }
 
-FPType::~FPType() { }
-
 bool BoolType::Equal(const Type & other) const {
     return true;
 }
@@ -36,8 +30,6 @@ Handle<Type> BoolType::Clone() const {
 std::string BoolType::ToString() const {
     return "Bool";
 }
-
-BoolType::~BoolType() { }
 
 bool VectorType::Equal(const Type & other) const {
     return *t_ == static_cast<const VectorType &>(other);
@@ -53,8 +45,6 @@ Handle<Type> VectorType::Clone() const {
 std::string VectorType::ToString() const {
     return "[" + t_->ToString() + "]";
 }
-
-VectorType::~VectorType() { }
 
 IncompatibileTypesException::IncompatibileTypesException(
         Handle<Type> && expected,
@@ -74,5 +64,3 @@ const char * IncompatibileTypesException::what() const noexcept {
     return msg_.c_str();
 }
 
-IncompatibileTypesException::~IncompatibileTypesException() { }
-    

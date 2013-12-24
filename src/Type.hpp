@@ -6,6 +6,7 @@
 #include <string>
 #include <exception>
 #include <stdexcept>
+#include <memory>
 
 template <typename T>
 using Handle = std::unique_ptr<T>;
@@ -18,7 +19,7 @@ public:
     bool operator== (const Type & other) const;
 
     virtual Handle<Type> Clone() const = 0;
-    virtual std::string ToString() const;
+    virtual std::string ToString() const = 0;
 
     virtual ~Type() = default;
 };
@@ -29,7 +30,7 @@ public:
     virtual Handle<Type> Clone() const = 0;
     virtual std::string ToString() const = 0;
 
-    virtual ~SimpleType();
+    virtual ~SimpleType() = default;
 };
 
 class CompositeType : public Type {
@@ -37,7 +38,8 @@ class CompositeType : public Type {
 public:
     virtual Handle<Type> Clone() const = 0;
     virtual std::string ToString() const = 0;
-    virtual ~CompositeType();
+
+    virtual ~CompositeType() = default;
 };
 
 class FPType : public SimpleType {
@@ -46,7 +48,7 @@ public:
     virtual Handle<Type> Clone() const;
     virtual std::string ToString() const;
 
-    virtual ~FPType();
+    virtual ~FPType() = default;
 };
 
 class BoolType : public SimpleType {
@@ -55,7 +57,7 @@ public:
     virtual Handle<Type> Clone() const;
     virtual std::string ToString() const;
 
-    virtual ~BoolType();
+    virtual ~BoolType() = default;
 };
 
 class VectorType : public CompositeType {
@@ -69,7 +71,7 @@ public:
     virtual Handle<Type> Clone() const;
     virtual std::string ToString() const;
 
-    virtual ~VectorType();
+    virtual ~VectorType() = default;
 };
 
 class IncompatibileTypesException : virtual public std::exception {
@@ -81,7 +83,7 @@ public:
 
     virtual const char * what() const noexcept;
 
-    virtual ~IncompatibileTypesException();
+    virtual ~IncompatibileTypesException() = default;
 };
 
 #endif // _TYPE_HPP
