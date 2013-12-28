@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project (GP)
 enable_testing()
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb -Wall -std=c++11 -frtti")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb -Wall -std=c++0x -frtti")
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set (GP_SOURCE
