@@ -1,4 +1,56 @@
+#include <utility>
+#include <string>
+
+#include "Exception.hpp"
 #include "Value.hpp"
+
+ValueHandle::ValueHandle(Value * v) {
+    if (!v) 
+        throw NullPtrDereferenceException();
+    v_ = v;
+}
+
+ValueHandle::ValueHandle(const ValueHandle & v) {
+    *this = v;
+}
+
+ValueHandle::ValueHandle(ValueHandle && v) {
+    *this = std::move(v);
+}
+
+Value & ValueHandle::operator* () {
+    return *v_;
+}
+
+const Value & ValueHandle::operator* () const {
+    return *v_;
+}
+
+Value * ValueHandle::operator-> () {
+    return v_;
+}
+
+const Value * ValueHandle::operator-> () const {
+    return v_;
+}
+
+ValueHandle & ValueHandle::operator= (const ValueHandle & v) {
+    *this = std::move(v->Clone());
+    return *this;
+}
+
+ValueHandle & ValueHandle::operator= (ValueHandle && v) {
+    swap(v);
+    return *this;
+}
+
+void ValueHandle::swap(ValueHandle & v) {
+    std::swap(v_, v.v_);
+}
+
+ValueHandle::~ValueHandle() {
+    delete v_;
+}
 
 FPValue::FPValue(double val)
     : val_(val) { }
@@ -6,12 +58,12 @@ FPValue::FPValue(double val)
 FPValue::FPValue(const FPValue & v)
     : val_(v.val_) { }
 
-Handle<Type> FPValue::GetType() const {
-    return Handle<Type>(new FPType);
+TypeHandle FPValue::GetType() const {
+    return TypeHandle(new FPType);
 }
 
-Handle<Value> FPValue::Clone() const {
-    return Handle<Value>(new FPValue(*this));
+ValueHandle FPValue::Clone() const {
+    return ValueHandle(new FPValue(*this));
 }
 
 BoolValue::BoolValue(bool val)
@@ -20,15 +72,15 @@ BoolValue::BoolValue(bool val)
 BoolValue::BoolValue(const BoolValue & v)
     : val_(v.val_) { }
 
-Handle<Type> BoolValue::GetType() const {
-    return Handle<Type>(new BoolType);
+TypeHandle BoolValue::GetType() const {
+    return TypeHandle(new BoolType);
 }
 
-Handle<Value> BoolValue::Clone() const {
-    return Handle<Value>(new BoolValue(*this));
+ValueHandle BoolValue::Clone() const {
+    return ValueHandle(new BoolValue(*this));
 }
 
-VectorValue::VectorValue(Handle<Type> && t, std::vector<Handle<Value> > && vals)
+VectorValue::VectorValue(TypeHandle && t, std::vector<ValueHandle > && vals)
     : t_(std::move(t)) {
 
     for (size_type i = 0; i < vals.size(); ++i) {
@@ -42,17 +94,17 @@ VectorValue::VectorValue(Handle<Type> && t, std::vector<Handle<Value> > && vals)
 }
 
 VectorValue::VectorValue(const VectorValue & v)
-    : t_(std::move(v.t_->Clone())) {
+    : t_(v.t_) {
     for (auto & val : v.vals_)
         vals_.push_back(std::move(val->Clone()));
 }
 
-Handle<Type> VectorValue::GetType() const {
-    return Handle<Type>(new VectorType(std::move(t_->Clone()), Size()));
+TypeHandle VectorValue::GetType() const {
+    return TypeHandle(new VectorType(std::move(t_->Clone()), Size()));
 }
 
-Handle<Value> VectorValue::Clone() const {
-    return Handle<Value>(new VectorValue(*this));
+ValueHandle VectorValue::Clone() const {
+    return ValueHandle(new VectorValue(*this));
 }
 
 size_type VectorValue::Size() const {

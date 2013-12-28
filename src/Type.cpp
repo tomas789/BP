@@ -1,4 +1,73 @@
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "Exception.hpp"
 #include "Type.hpp"
+
+TypeHandle::TypeHandle(Type * t) { 
+    if (!t)
+        throw NullPtrDereferenceException();
+
+    t_ = t;
+}
+
+TypeHandle::TypeHandle(const TypeHandle & t) {
+    *this = t;
+}
+
+TypeHandle::TypeHandle(TypeHandle && t) {
+    *this = std::move(t);
+}
+
+TypeHandle::TypeHandle(std::unique_ptr<Type> && t)
+    : t_(t.release()) { }
+
+TypeHandle & TypeHandle::operator= (const TypeHandle & other) {
+    *this = std::move(other->Clone());
+    return *this;
+}
+
+TypeHandle & TypeHandle::operator= (TypeHandle && other) {
+    t_ = nullptr;
+    std::swap(t_, other.t_);
+    return *this;
+}
+
+bool TypeHandle::operator== (const TypeHandle & other) const {
+    if (!t_)
+        throw NullPtrDereferenceException();
+
+    return *t_ == *other.t_;
+}
+
+bool TypeHandle::operator!= (const TypeHandle & other) const {
+    return !(*this == other);
+}
+
+TypeHandle::operator std::string() const {
+    return t_->ToString();
+}
+
+Type * TypeHandle::operator-> () {
+    return t_;
+}
+
+const Type * TypeHandle::operator-> () const {
+    return t_;
+}
+
+Type & TypeHandle::operator* () {
+    return *t_;
+}
+
+const Type & TypeHandle::operator* () const {
+    return *t_;
+}
+
+TypeHandle::~TypeHandle() {
+    delete t_;
+}
 
 bool Type::operator== (const Type & other) const {
     if (typeid(*this) != typeid(other))
@@ -7,48 +76,99 @@ bool Type::operator== (const Type & other) const {
     return Equal(other);
 }
 
+bool FunctionType::Equal(const Type & other) const {
+    const FunctionType & f = static_cast<const FunctionType &>(other);
+    return RetVal_ == f.RetVal_ && Args_ == f.Args_;
+}
+
+FunctionType::FunctionType(TypeHandle && RetVal, std::vector<TypeHandle> && Args)
+    : RetVal_(std::move(RetVal)), Args_(std::move(Args)) { }
+
+TypeHandle FunctionType::Clone() const {
+    TypeHandle NewRetVal = RetVal_->Clone();
+    std::vector<TypeHandle> NewArgs;
+    for (auto & a : Args_)
+        NewArgs.push_back(std::move(a->Clone()));
+
+    return TypeHandle(new FunctionType(std::move(NewRetVal), std::move(NewArgs)));
+}
+
+std::string FunctionType::ToString() const {
+    std::string str;
+
+    str = RetVal_->ToString();
+    
+    str += "(";
+    for (auto it = Args_.begin();; ++it) {
+        str += (*it)->ToString();
+        if (it + 1 != Args_.end())
+            str += ",";
+        else
+            break;
+    }
+
+    return str += ")";
+}
+
+TypeHandle FunctionType::get(TypeHandle && RetVal, std::vector<TypeHandle> && Args) {
+    return TypeHandle(new FunctionType(std::move(RetVal), std::move(Args)));
+}
+
 bool FPType::Equal(const Type & other) const {
     return true;
 }
 
-Handle<Type> FPType::Clone() const {
-    return Handle<Type>(new FPType);
+TypeHandle FPType::Clone() const {
+    return TypeHandle(new FPType);
 }
 
 std::string FPType::ToString() const {
     return "FloatingPoint";
 }
 
+TypeHandle FPType::get() {
+    return TypeHandle(new FPType);
+}
+
 bool BoolType::Equal(const Type & other) const {
     return true;
 }
 
-Handle<Type> BoolType::Clone() const {
-    return Handle<Type>(new BoolType);
+TypeHandle BoolType::Clone() const {
+    return TypeHandle(new BoolType);
 }
 
 std::string BoolType::ToString() const {
     return "Bool";
 }
 
-bool VectorType::Equal(const Type & other) const {
-    return *t_ == static_cast<const VectorType &>(other);
+TypeHandle BoolType::get() {
+    return TypeHandle(new BoolType);
 }
 
-VectorType::VectorType(Handle<Type> && t, size_type n)
+bool VectorType::Equal(const Type & other) const {
+    const VectorType & v = static_cast<const VectorType &>(other);
+    return *t_ == *v.t_ && n_ == v.n_;
+}
+
+VectorType::VectorType(TypeHandle && t, size_type n)
     : t_(std::move(t)), n_(n) { }
 
-Handle<Type> VectorType::Clone() const {
-    return Handle<Type>(new VectorType(std::move(t_->Clone()), n_));
+TypeHandle VectorType::Clone() const {
+    return TypeHandle(new VectorType(std::move(t_->Clone()), n_));
 }
 
 std::string VectorType::ToString() const {
-    return "[" + t_->ToString() + "]";
+    return "[" + t_->ToString() + ";" + std::to_string(n_) + "]";
+}
+
+TypeHandle VectorType::get(TypeHandle && t, size_type n) {
+    return TypeHandle(new VectorType(std::move(t), n));
 }
 
 IncompatibileTypesException::IncompatibileTypesException(
-        Handle<Type> && expected,
-        Handle<Type> && actual) {
+        TypeHandle && expected,
+        TypeHandle && actual) {
     msg_ = "Incompatibile types: " + expected->ToString() + ", " + actual->ToString();
 }
 
