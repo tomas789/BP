@@ -28,8 +28,8 @@ SET_DIRECTORY_PROPERTIES(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/third_party)
 # http://stackoverflow.com/questions/9689183/cmake-googletest
 ExternalProject_Add(
     googletest
-    # URL http://googletest.googlecode.com/files/gtest-1.7.0.zip
-    URL ${CMAKE_SOURCE_DIR}/gtest-1.7.0.zip
+    URL http://googletest.googlecode.com/files/gtest-1.7.0.zip
+    # URL ${CMAKE_SOURCE_DIR}/gtest-1.7.0.zip
     # TIMEOUT 10
     # # Force separate output paths for debug and release builds to allow easy
     # # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
