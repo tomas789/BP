@@ -114,6 +114,15 @@ TypeHandle FunctionType::get(TypeHandle && RetVal, std::vector<TypeHandle> && Ar
     return TypeHandle(new FunctionType(std::move(RetVal), std::move(Args)));
 }
 
+TypeHandle FunctionType::get(const TypeHandle & RetVal, const std::vector<TypeHandle> & Args) {
+    std::vector<TypeHandle> NewArgs;
+
+    for (auto & a : Args)
+        NewArgs.push_back(std::move(a->Clone()));
+
+    return std::move(FunctionType::get(std::move(RetVal->Clone()), std::move(NewArgs)));
+}
+
 bool FPType::Equal(const Type & other) const {
     return true;
 }

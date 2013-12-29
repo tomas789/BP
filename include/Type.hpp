@@ -81,6 +81,7 @@ public:
     virtual std::string ToString() const;
 
     static TypeHandle get(TypeHandle && RetVal, std::vector<TypeHandle> && Args);
+    static TypeHandle get(const TypeHandle & RetVal, const std::vector<TypeHandle> & Args);
 
     ~FunctionType() = default;
 };

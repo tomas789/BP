@@ -49,6 +49,39 @@ TEST(Type, TypeHandle) {
     ASSERT_EQ(fp, fp3);
 }
 
+TEST(Type, FunctionType) {
+    TypeHandle fp = FPType::get();
+    TypeHandle bo = BoolType::get();
+
+    std::vector<TypeHandle> args;
+    args.push_back(FPType::get());
+
+    std::vector<TypeHandle> args2;
+    args2.push_back(BoolType::get());
+
+    TypeHandle f1 = FunctionType::get(fp, args);
+    TypeHandle f2 = FunctionType::get(fp, args);
+
+    ASSERT_EQ(f1, f2);
+    ASSERT_EQ(f1, FunctionType::get(FPType::get(), args));
+}
+
+TEST(Type, FunctionType_ToString) {
+    std::vector<TypeHandle> args;
+    args.push_back(std::move(BoolType::get()));
+    TypeHandle f1 = FunctionType::get(FPType::get(), args);
+    ASSERT_STREQ("FloatingPoint(Bool)", f1->ToString().c_str());
+
+    TypeHandle f2 = FunctionType::get(BoolType::get(), args);
+    ASSERT_STREQ("Bool(Bool)", f2->ToString().c_str());
+
+    std::vector<TypeHandle> args2;
+    args2.push_back(FPType::get());
+    args2.push_back(BoolType::get());
+    TypeHandle f3 = FunctionType::get(FPType::get(), args2);
+    ASSERT_STREQ("FloatingPoint(FloatingPoint,Bool)", f3->ToString().c_str());
+}
+
 TEST(Type, ConvertingTypeToString) {
     TypeHandle fp = FPType::get();
     ASSERT_STREQ("FloatingPoint", fp->ToString().c_str());
